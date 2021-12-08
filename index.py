@@ -220,9 +220,8 @@ w_train, w_test, z_train, z_test = train_test_split(emails2_df["text_clean"], em
 jobs_train_df = pd.DataFrame(w_train)
 jobs_train_df["label"] = z_train.tolist()
 
-jobs_train_df
-
-jobs_train_df.loc[w_train_df['label'] == "ham"]
+#jobs_train_df.loc[w_train_df['label'] == "ham"]
+jobs_train_df.loc[jobs_train_df['label'] == "ham"]
 
 w_train_tf = tfidfvectorizer.fit_transform(w_train)
 w_test_tf = tfidfvectorizer.transform(w_test)
@@ -233,7 +232,8 @@ naive_bayes_classifier.fit(w_train_tf.toarray(), z_train)
 jobs_test_df = pd.DataFrame(w_test)
 jobs_test_df["label"] = z_test.tolist()
 
-jobs_test_df
+
+z_pred = naive_bayes_classifier.predict(w_test_tf.toarray())
 
 jobs_test_df["prediction"] = z_pred.tolist()
 jobs_test_df
