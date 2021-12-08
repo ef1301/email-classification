@@ -59,7 +59,7 @@ maxtokenlen = 100 # the maximum length of each token
 # Tokenization method 1
 # this is tokenization split by white sapce
 def tokenize_1(row):
-    if row is None or row is '':
+    if row is None or row == '':
         tokens = ""
     else:
         tokens = str(row).split(" ")[:maxtokens]
@@ -213,18 +213,32 @@ jobs1_df["text_clean"] = jobs1_df["body"].apply(lambda x: utils_preprocess_text(
 ham_df = email_df.loc[email_df['label'] == "ham"]
 
 emails2_df = ham_df.append(jobs1_df) 
+emails2_df
 emails2_df.loc[emails2_df['label'] == "jobs"]
 
 w_train, w_test, z_train, z_test = train_test_split(emails2_df["text_clean"], emails2_df["label"], test_size=0.2, stratify=emails2_df["label"], random_state=0)
+jobs_train_df = pd.DataFrame(w_train)
+jobs_train_df["label"] = z_train.tolist()
 
-w_train_df = pd.DataFrame(w_train)
-z_train_df = pd.DataFrame(z_train)
+jobs_train_df
 
-emails2_train_df = pd.merge(w_train_df, z_train_df, left_on=w_train_df.index, right_on = z_train_df.index)
-emails2_train_df = emails2_train_df.drop('key_0',axis=1)
+jobs_train_df.loc[w_train_df['label'] == "ham"]
 
-w_test_df = pd.DataFrame(w_test)
-z_test_df = pd.DataFrame(z_test)
+w_train_tf = tfidfvectorizer.fit_transform(w_train)
+w_test_tf = tfidfvectorizer.transform(w_test)
 
-emails2_test_df = pd.merge(w_test_df, z_test_df, left_on=w_test_df.index, right_on = z_test_df.index)
-emails2_test_df = emails2_test_df.drop('key_0',axis=1)
+naive_bayes_classifier = MultinomialNB()
+naive_bayes_classifier.fit(w_train_tf.toarray(), z_train)
+
+jobs_test_df = pd.DataFrame(w_test)
+jobs_test_df["label"] = z_test.tolist()
+
+jobs_test_df
+
+jobs_test_df["prediction"] = z_pred.tolist()
+jobs_test_df
+
+print(sum(jobs_test_df["label"] == jobs_test_df["prediction"]))
+print(len(jobs_test_df))
+
+print("accuracy:", sum(jobs_test_df["label"] == jobs_test_df["prediction"])/len(jobs_test_df))
