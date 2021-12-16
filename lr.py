@@ -8,16 +8,18 @@ import nltk
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import confusion_matrix
+from sklearn.linear_model import LogisticRegression
 
-
-#for dirname, _, filenames in os.walk('/kaggle/input'):
-#    for filename in filenames:
-#        print(os.path.join(dirname, filename))
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
 
 # You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
 # You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+
+
+# Input data files are available in the "../input/" directory.
+filepath = "input/spam_ham_dataset.csv"
 
 # Read the data into a pandas dataframe called emails
 emails=pd.read_csv('input/spam_ham_dataset.csv')
@@ -47,11 +49,17 @@ pd.set_option('display.max_colwidth', 200)
 # from here email_df is our dataframe
 email_df.head() # you could do print(bodies_df.head()), but Jupyter displays this nicer for pandas DataFrames
 
+jobs1_df=pd.read_csv("input/jobs-1.csv")
+
+email_df = email_df.append(jobs1_df, ignore_index=True)
+print(email_df)
+
 # ----------------------------------------------------------------------------------- PREPROCESSING
 
 # hyperparameters 
 maxtokens = 200 # the maximum number of tokens per document
 maxtokenlen = 100 # the maximum length of each token
+
 
 # Tokenization method 1
 # this is tokenization split by white sapce
@@ -116,35 +124,26 @@ def utils_preprocess_text(text, flg_tokenize=1, flg_stopwords=1, flg_stemm=False
     ## clean (convert to lowercase and remove punctuations and characters and then strip)
     text = text.lower()
     text = reg_expressions(text)
-
     ## Tokenize (convert from string to list)
     if flg_tokenize == 1:
         text = tokenize_1(text)
-
     elif flg_tokenize == 2:
         text = tokenize_2(text)
-    
     elif flg_tokenize == 3:
         text = tokenize_3(text)
-        
     # remove Stopwords
     if flg_stopwords == 1:
         text = stop_word_removal1(text)
-        
     if flg_stopwords == 2:
         text = stop_word_removal2(text)
-        
     ## Stemming (remove -ing, -ly, ...)
     if flg_stemm == True:
         text = stemming(text)
-        
     ## Lemmatisation (convert the word into root word)
     if flg_lemm == True:
         text = lemmatization(text)
-        
     if flg_punct == True:
         text = remove_punct(text)
-            
     ## back to string from list
     text = " ".join(text)
     return text
@@ -175,9 +174,8 @@ x_train_tf = tfidfvectorizer.fit_transform(x_train)
 x_test_tf = tfidfvectorizer.transform(x_test)
 
 
-
-naive_bayes_classifier = MultinomialNB()
-naive_bayes_classifier.fit(x_train_tf.toarray(), y_train)
+classifier = LogisticRegression(multi_class='multinomial', solver = "newton-cg", class_weight = 'balanced')
+classifier.fit(x_train_tf.toarray(), y_train)
 
 x_train_df = pd.DataFrame(x_train)
 y_train_df = pd.DataFrame(y_train)
@@ -193,52 +191,10 @@ email_test_df = x_test_df.join(y_test_df, lsuffix='_caller', rsuffix='_other')
 email_test_df = email_test_df.join(email_df[["subject","body"]], lsuffix='_caller', rsuffix='_other', how='left')
 email_test_df = email_test_df[["subject","body", "text_clean", "label"]]
 
-y_pred = naive_bayes_classifier.predict(x_test_tf.toarray())
-
-print(confusion_matrix(y_test, y_pred))
+y_pred = classifier.predict(x_test_tf.toarray())
 
 email_test_df["prediction"] = y_pred.tolist()
 
-#print(sum(email_test_df["label"] == email_test_df["prediction"]))
-#print(len(email_test_df))
-#print("accuracy:", sum(email_test_df["label"] == email_test_df["prediction"])/len(email_test_df))
-
-
-# Readings of all jobs csv (probably will need more than 1)
-jobs1_df=pd.read_csv("input/jobs-1.csv")
-#print("Successfully loaded {} rows and {} columns!".format(jobs1_df.shape[0], jobs1_df.shape[1]))
-jobs1_df["text_clean"] = jobs1_df["body"].apply(lambda x: utils_preprocess_text(x, flg_tokenize=2, flg_stopwords=2, flg_stemm=True, flg_lemm=True, flg_punct=True))
-
-ham_df = email_df.loc[email_df['label'] == "ham"]
-
-emails2_df = ham_df.append(jobs1_df) 
-emails2_df
-emails2_df.loc[emails2_df['label'] == "jobs"]
-
-w_train, w_test, z_train, z_test = train_test_split(emails2_df["text_clean"], emails2_df["label"], test_size=0.2, stratify=emails2_df["label"], random_state=0)
-jobs_train_df = pd.DataFrame(w_train)
-jobs_train_df["label"] = z_train.tolist()
-
-#jobs_train_df.loc[w_train_df['label'] == "ham"]
-jobs_train_df.loc[jobs_train_df['label'] == "ham"]
-
-w_train_tf = tfidfvectorizer.fit_transform(w_train)
-w_test_tf = tfidfvectorizer.transform(w_test)
-
-naive_bayes_classifier = MultinomialNB()
-naive_bayes_classifier.fit(w_train_tf.toarray(), z_train)
-
-jobs_test_df = pd.DataFrame(w_test)
-jobs_test_df["label"] = z_test.tolist()
-
-
-z_pred = naive_bayes_classifier.predict(w_test_tf.toarray())
-print(confusion_matrix(z_test, z_pred))
-
-jobs_test_df["prediction"] = z_pred.tolist()
-jobs_test_df
-
-print(sum(jobs_test_df["label"] == jobs_test_df["prediction"]))
-print(len(jobs_test_df))
-
-print("accuracy:", sum(jobs_test_df["label"] == jobs_test_df["prediction"])/len(jobs_test_df))
+print(sum(email_test_df["label"] == email_test_df["prediction"]))
+print(len(email_test_df))
+print("accuracy:", sum(email_test_df["label"] == email_test_df["prediction"])/len(email_test_df))
