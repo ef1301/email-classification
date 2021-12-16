@@ -80,7 +80,7 @@ maxtokenlen = 100 # the maximum length of each token
 # Tokenization method 1
 # this is tokenization split by white sapce
 def tokenize_1(row):
-    if row is None or row is '':
+    if row is None or row == '':
         tokens = ""
     else:
         tokens = str(row).split(" ")[:maxtokens]
@@ -319,10 +319,10 @@ import matplotlib.pyplot as plt
 
 X = x_train_tf.todense()
 
-pca = PCA(n_components=2).fit(X)
-data2D = pca.transform(X)
-plt.scatter(data2D[:,0], data2D[:,1])
-plt.show()             
+# pca = PCA(n_components=2).fit(X)
+# data2D = pca.transform(X)
+# plt.scatter(data2D[:,0], data2D[:,1])
+# plt.show()             
 
 
 # In[25]:
@@ -453,3 +453,43 @@ print(sum(email_test_df["label"] == email_test_df["prediction_dtree"]))
 print(len(email_test_df))
 
 print("accuracy:", sum(email_test_df["label"] == email_test_df["prediction_dtree"])/len(email_test_df))
+
+
+
+# LogisticRegression
+
+from sklearn.linear_model import LogisticRegression
+
+classifier = LogisticRegression(multi_class='multinomial', solver = "newton-cg", class_weight = 'balanced')
+classifier.fit(x_train_tf.toarray(), y_train)
+y_pred_lr = classifier.predict(x_test_tf)
+
+email_test_df["prediction_lr"] = y_pred_lr.tolist()
+email_test_df.head()
+
+print(sum(email_test_df["label"] == email_test_df["prediction_lr"]))
+print(len(email_test_df))
+
+print("accuracy:", sum(email_test_df["label"] == email_test_df["prediction_lr"])/len(email_test_df))
+
+
+
+
+print("\n\n\n--------------------------------------------\n\n\n")
+
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
+
+
+for x in ["prediction", "prediction_knn", "prediction_svm", "prediction_dtree", "prediction_lr"]:
+    print(x)
+    print("confusion matrix")
+    print(confusion_matrix(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"]))
+    print("precision score")
+    print(precision_score(email_test_df["label"], email_test_df[x], average=None))
+    print("recall score")
+    print(recall_score(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"], average=None))
+    print("f1 score")
+    print(f1_score(email_test_df["label"], email_test_df[x], average=None))
+    print("accuracy score")
+    print(accuracy_score(email_test_df["label"], email_test_df[x]))
+    print()
