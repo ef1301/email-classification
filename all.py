@@ -415,7 +415,7 @@ email_test_df.loc[email_test_df["prediction_knn"] != email_test_df["label"] ].he
 
 
 from sklearn.svm import SVC
-svclassifier = SVC(kernel='linear')
+svclassifier = SVC(kernel='linear', random_state=0)
 svclassifier.fit(x_train_tf, y_train)
 y_pred_svm = svclassifier.predict(x_test_tf)
 
@@ -438,7 +438,7 @@ print("accuracy:", sum(email_test_df["label"] == email_test_df["prediction_svm"]
 
 
 from sklearn.tree import DecisionTreeClassifier
-classifier = DecisionTreeClassifier()
+classifier = DecisionTreeClassifier(random_state=0)
 classifier.fit(x_train_tf, y_train)
 y_pred_dtree = classifier.predict(x_test_tf)
 
@@ -485,11 +485,11 @@ for x in ["prediction", "prediction_knn", "prediction_svm", "prediction_dtree", 
     print("confusion matrix")
     print(confusion_matrix(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"]))
     print("precision score")
-    print(precision_score(email_test_df["label"], email_test_df[x], average=None))
+    print(precision_score(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"], average=None))
     print("recall score")
     print(recall_score(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"], average=None))
     print("f1 score")
-    print(f1_score(email_test_df["label"], email_test_df[x], average=None))
+    print(f1_score(email_test_df["label"], email_test_df[x], labels=["spam", "ham", "jobs"], average=None))
     print("accuracy score")
     print(accuracy_score(email_test_df["label"], email_test_df[x]))
     print()
