@@ -1,3 +1,5 @@
+# Separation of predictions into ham and spam && ham and jobs
+
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import os
@@ -11,17 +13,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import confusion_matrix
 
-
-#for dirname, _, filenames in os.walk('/kaggle/input'):
-#    for filename in filenames:
-#        print(os.path.join(dirname, filename))
-
-# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
-# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
-
 # Read the data into a pandas dataframe called emails
 emails=pd.read_csv('input/spam_ham_dataset.csv')
-#print("Successfully loaded {} rows and {} columns!".format(emails.shape[0], emails.shape[1]))
 
 def get_email_subject(email):
     subject = email[0:email.find('\r\n')]
